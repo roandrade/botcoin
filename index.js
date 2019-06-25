@@ -1,6 +1,8 @@
 require("dotenv-safe").load()
 const MercadoBitcoin = require("./api").MercadoBitcoin
 const MercadoBitcoinTrade = require("./api").MercadoBitcoinTrade
+const Core = require('./core/core')
+
 var infoApi = new MercadoBitcoin({ currency: 'BTC' })
 var tradeApi = new MercadoBitcoinTrade({
     currency: 'BTC',
@@ -8,6 +10,12 @@ var tradeApi = new MercadoBitcoinTrade({
     secret: process.env.SECRET,
     pin: process.env.PIN
 })
+var configParams = {
+    taxes: process.env.TAXES,
+    profit: process.env.PROFIT,
+    tolerance: process.env.TOLERANCE
+}
+var core = new Core(process.env.queueLength, configParams);
 //espera a moeda que estamos negociando, o preço de uma unidade dela, se é uma compra ou venda (true/false) e um callback.
 function getQuantity(coin, price, isBuy, callback){
     price = parseFloat(price)
@@ -28,8 +36,10 @@ function getQuantity(coin, price, isBuy, callback){
 setInterval(() => 
    infoApi.ticker((response) => {
        console.log(response.ticker)
+       core.execute(ticker);
+
        //importante acertar o valor da moeda
-       if(response.ticker.sell <= valor_moeda){
+/*       if(response.ticker.sell <= valor_moeda){
            getQuantity('BRL', response.ticker.sell, true, (qty) => {
                 tradeApi.placeBuyOrder(qty, response.ticker.sell, 
                     (data) => {
@@ -43,7 +53,7 @@ setInterval(() =>
            })
        }
        else
-            console.log('Ainda muito alto, vamos esperar pra comprar depois.')
+            console.log('Ainda muito alto, vamos esperar pra comprar depois.')*/
    }),
    process.env.CRAWLER_INTERVAL
 )
