@@ -2,11 +2,25 @@ function Queue(){
 
     this.lista = new Array();
  
-    this.Inserir = function(obj){
+    this.inserir = (obj) => {
         this.lista[this.lista.length] = obj;
     }
+
+    this.inserirDiferente = (obj) => {
+        if(!this.objIsEquals(obj)){
+            this.inserir(obj)
+            return true;
+        }
+        return false;
+    }
+
+    this.objIsEquals = (newObj) => {
+        let oldObj = this.lerUltimo();
+        return oldObj != undefined 
+                && newObj.last === oldObj.last
+    }
  
-    this.RemoverPrimeiro = function(){
+    this.removerPrimeiro = function(){
         if(this.lista.length > 0){
             var obj = this.lista[0];
             this.lista.splice(0,1);
@@ -16,7 +30,7 @@ function Queue(){
         }
     }
  
-    this.LerPrimeiro = function(){
+    this.lerPrimeiro = function(){
         if(this.lista.length > 0){
             return this.lista[0];
         }else{
@@ -40,3 +54,5 @@ function Queue(){
         }
     }
 }
+
+module.exports = { Queue }

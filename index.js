@@ -1,11 +1,13 @@
 require("dotenv-safe").load()
+
 const MercadoBitcoin = require("./api").MercadoBitcoin
 const MercadoBitcoinTrade = require("./api").MercadoBitcoinTrade
-const Core = require('./core/core')
+const Core = require('./core/core').Core
+const DateUtils = require('./utils/dateUtils').DateUtils
 
-var infoApi = new MercadoBitcoin({ currency: 'BTC' })
+var infoApi = new MercadoBitcoin({ currency: 'LTC' })
 var tradeApi = new MercadoBitcoinTrade({
-    currency: 'BTC',
+    currency: 'LTC',
     key: process.env.KEY,
     secret: process.env.SECRET,
     pin: process.env.PIN
@@ -15,7 +17,8 @@ var configParams = {
     profit: process.env.PROFIT,
     tolerance: process.env.TOLERANCE
 }
-var core = new Core(process.env.queueLength, configParams);
+var core = new Core(process.env.QUEUE_LENGTH, configParams);
+var dateUtils = new DateUtils();
 //espera a moeda que estamos negociando, o preço de uma unidade dela, se é uma compra ou venda (true/false) e um callback.
 function getQuantity(coin, price, isBuy, callback){
     price = parseFloat(price)
@@ -35,8 +38,9 @@ function getQuantity(coin, price, isBuy, callback){
 
 setInterval(() => 
    infoApi.ticker((response) => {
+       console.log(`Comecei a rodar ${dateUtils.getCurrentDateTime()}`)
        console.log(response.ticker)
-       core.execute(ticker);
+       core.execute(response.ticker)
 
        //importante acertar o valor da moeda
 /*       if(response.ticker.sell <= valor_moeda){

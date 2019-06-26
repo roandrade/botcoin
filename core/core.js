@@ -1,7 +1,11 @@
-const Queue = require('../utils/queue')
-const DateUtils = require('../utils/dateUtils');
+const Queue = require('../utils/queue').Queue
+const DateUtils = require('../utils/dateUtils').DateUtils;
 
-var Core = (queueLength, configParams) => {
+function Core(queueLength, configParams) {
+
+    this.queueLength = queueLength;
+
+    this.configParams = configParams;
     
     this.queue = new Queue();
 
@@ -20,13 +24,17 @@ var Core = (queueLength, configParams) => {
     this.sellPrice = 0.0;
 
     this.refreshData = (ticker) => {
-        queue.inserir(ticker);
-        if(queue.lista.length > queueLength){
+        let atualizou = this.queue.inserirDiferente(ticker);
+        if(atualizou)
+            console.log(`Queue atualizada: ${this.queue.lista.length}`)
+        else
+            console.log(`Queue não atualizada, tickers iguais.`)
+        if(this.queue.lista.length > queueLength){
 
-            queue.removerPrimeiro()
-            let sum = queue.lista.reduce((tickerA,tickerB) => tickerA.low + tickerB.low, 0)
-            this.mimPriceAverage = sum / queue.lista.length
-            this.lastPrice = queue.lerNaPosicao(queue.lista.length - 2).last;
+            this.queue.removerPrimeiro()
+            let sum = this.queue.lista.reduce((tickerA,tickerB) => tickerA.last + tickerB.last, 0)
+            this.mimPriceAverage = sum / this.queue.lista.length
+            this.lastPrice = this.queue.lerNaPosicao(this.queue.lista.length - 2).last;
             this.currentPrice = ticker.last;
 
         }        
@@ -51,10 +59,13 @@ var Core = (queueLength, configParams) => {
                         return true;
                     }
         }
-        console.log(`Comprei: ${this.bought}
-                     Ainda não é uma boa pra vender.
-                     Preço atual: ${this.currentPrice}
-                     Preço com lucro: ${this.getMinPriceToSell()}`)
+        console.log(`Comprei: ${this.bought}`);
+        if(this.bought){
+            console.log(`
+                Ainda não é uma boa pra vender.
+                Preço atual: ${this.currentPrice}
+                Preço com lucro: ${this.getMinPriceToSell()}`)
+        }
         return false;
     }
 
@@ -80,3 +91,5 @@ var Core = (queueLength, configParams) => {
     }
 
 }
+
+module.exports = { Core }

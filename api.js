@@ -16,14 +16,18 @@ const ENDPOINT_API = 'https://www.mercadobitcoin.com.br/api/'
 const ENDPOINT_TRADE_PATH = "/tapi/v3/"
 const ENDPOINT_TRADE_API = 'https://www.mercadobitcoin.net' + ENDPOINT_TRADE_PATH
 
-const unirest = require('unirest')
-const ENDPOINT_API = 'https://www.mercadobitcoin.com.br/api/'
 
 var MercadoBitcoinTrade = function (config) {
     this.config = {
         KEY: config.key,
         SECRET: config.secret,
         PIN: config.pin,
+        CURRENCY: config.currency
+    }
+}
+
+var MercadoBitcoin = function (config) {
+    this.config = {
         CURRENCY: config.currency
     }
 }
