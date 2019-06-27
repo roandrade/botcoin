@@ -36,6 +36,10 @@ function Core(queueLength, configParams) {
             this.mimPriceAverage = sum / this.queue.lista.length
             this.lastPrice = this.queue.lerNaPosicao(this.queue.lista.length - 2).last;
             this.currentPrice = ticker.last;
+            Console.log(`Valores: 
+                Ultimo preço: ${this.lastPrice}
+                Valor atual: ${this.currentPrice}
+                Média do menor preço: ${this.mimPriceAverage}`)
 
         }        
     }
