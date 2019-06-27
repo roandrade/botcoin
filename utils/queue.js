@@ -47,7 +47,7 @@ function Queue(){
     }
 
     this.lerNaPosicao = (position) =>{
-        if(posistion >=0 && position < this.lista.length && this.lista.length > 0){
+        if(position >=0 && position < this.lista.length && this.lista.length > 0){
             return this.lista[position];
         }else{
             console.log('Posicao incorreta ou lista vazia.')
