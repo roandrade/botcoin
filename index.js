@@ -5,16 +5,16 @@ const MercadoBitcoinTrade = require("./api").MercadoBitcoinTrade
 const Core = require('./core/core').Core
 const DateUtils = require('./utils/dateUtils').DateUtils
 
-var infoApi = new MercadoBitcoin({ currency: 'LTC' })
+var infoApi = new MercadoBitcoin({ currency: process.env.CURRENCY })
 var tradeApi = new MercadoBitcoinTrade({
-    currency: 'LTC',
+    currency: process.env.CURRENCY,
     key: process.env.KEY,
     secret: process.env.SECRET,
     pin: process.env.PIN
 })
 var configParams = {
     taxes: process.env.TAXES,
-    profit: process.env.PROFIT,
+    profit: process.env.PROFITABILITY,
     tolerance: process.env.TOLERANCE
 }
 var core = new Core(process.env.QUEUE_LENGTH, configParams);
@@ -39,8 +39,12 @@ function getQuantity(coin, price, isBuy, callback){
 setInterval(() => 
    infoApi.ticker((response) => {
        console.log(`Comecei a rodar ${dateUtils.getCurrentDateTime()}`)
-       console.log(response.ticker)
-       core.execute(response.ticker)
+       if(process.env.CAN_EXECUTE === 'true'){
+           console.log(response.ticker)
+           core.execute(response.ticker)
+       }else{
+           console.log('No momento não estou operando no mercado.')
+       }
 
        //importante acertar o valor da moeda
 /*       if(response.ticker.sell <= valor_moeda){
