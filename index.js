@@ -17,7 +17,7 @@ var configParams = {
     profit: process.env.PROFITABILITY,
     tolerance: process.env.TOLERANCE
 }
-var core = new Core(process.env.QUEUE_LENGTH, configParams);
+var core = new Core(configParams);
 var dateUtils = new DateUtils();
 //espera a moeda que estamos negociando, o preço de uma unidade dela, se é uma compra ou venda (true/false) e um callback.
 function getQuantity(coin, price, isBuy, callback){
