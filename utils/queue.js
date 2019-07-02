@@ -53,6 +53,10 @@ function Queue(){
             console.log('Posicao incorreta ou lista vazia.')
         }
     }
+
+    this.length = () => {
+        return this.lista.length;
+    }
 }
 
 module.exports = { Queue }
