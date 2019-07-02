@@ -69,7 +69,7 @@ function Core(configParams) {
                                        <p>Preço de compra: ${this.market.currentPrice}</p>
                                        <p>Hora da compra: ${this.dateUtils.getCurrentDateTime()}</p>`);
             this.emailService.send();
-        } else {
+        } else if(!this.bought){
             console.log(`Não compensa comprar ainda. Veja as médias!`);
         }
         if(this.canSell()){
@@ -85,7 +85,10 @@ function Core(configParams) {
             console.log(`
                 Comprei, mas ainda não é uma boa pra vender.
                 Preço atual: ${this.market.currentPrice}
-                Preço com lucro: ${this.getMinPriceToSell()}`)
+                Preço com lucro: ${this.getMinPriceToSell()}
+                Preço de compra: ${this.buyPrice}
+                Taxa de lucro: ${this.configParams.profit}
+                Taxa de imposto: ${this.configParams.taxes}`)
         }
     }
 
