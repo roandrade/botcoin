@@ -2,9 +2,13 @@ function DateUtils(){
 
     this.getCurrentDateTime = () =>{
         let current = new Date();
-        return `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()} ${current.getHours()}:${current.getMinutes()}:${current.getSeconds()}`;
+        return `${format(current.getDate())}/${format(current.getMonth() + 1)}/${current.getFullYear()} ${format(current.getHours())}:${format(current.getMinutes())}:${format(current.getSeconds())}`;
     }
 
+}
+
+function format(number) {
+    return number < 10 ? `0${number}` : number;
 }
 
 module.exports = { DateUtils }
