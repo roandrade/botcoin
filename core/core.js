@@ -1,21 +1,14 @@
-const Queue = require('../utils/queue').Queue
+const Market = require('../market/market').Market;
 const DateUtils = require('../utils/dateUtils').DateUtils;
+const Email = require('../mail/email').Email;
 
-function Core(queueLength, configParams) {
-
-    this.queueLength = queueLength;
+function Core(configParams) {
 
     this.configParams = configParams;
     
-    this.queue = new Queue();
-
     this.dateUtils = new DateUtils();
 
-    this.minPriceAverage;
-
-    this.lastPrice;
-
-    this.currentPrice;
+    this.market = new Market();
 
     this.bought = false;
 
@@ -23,74 +16,76 @@ function Core(queueLength, configParams) {
 
     this.sellPrice = 0.0;
 
-    this.refreshData = (ticker) => {
-        let atualizou = this.queue.inserirDiferente(ticker);
-        if(atualizou)
-            console.log(`Queue atualizada: ${this.queue.lista.length}`)
-        else
-            console.log(`Queue não atualizada, tickers iguais.`)
-        if(this.queue.lista.length > queueLength){
+    this.emailService = new Email();
 
-            this.queue.removerPrimeiro()
-            let sum = this.queue.lista.reduce((tickerA,tickerB) => tickerA.last + tickerB.last, 0)
-            this.mimPriceAverage = sum / this.queue.lista.length
-            this.lastPrice = this.queue.lerNaPosicao(this.queue.lista.length - 2).last;
-            this.currentPrice = ticker.last;
-            console.log(`Valores: 
-                Ultimo preço: ${this.lastPrice}
-                Valor atual: ${this.currentPrice}
-                Média do menor preço: ${this.mimPriceAverage}`)
+    this.refresh = (ticker) => {
 
-        }        
+        this.market.refresh(ticker);
+        console.log(`Valores: 
+            Ultimo preço: ${this.market.lastPrice}
+            Valor atual: ${this.market.currentPrice}
+            Média de curto prazo: ${this.market.getShortTermAverage()}
+            Média de longo prazo: ${this.market.getLongTermAverage()}`)
+
     }
 
     this.canBuy = () => {
-        return this.lastPrice <= this.mimPriceAverage 
-                && !this.bought;
+        return !this.bought && this.market.isAveragesReady() && this.getShortTermAverage() > this.getLongTermAverage();
     }
 
     this.canSell = () =>{        
         if(this.bought 
-                && this.currentPrice > this.getMinPriceToSell()){
+                && this.market.currentPrice > this.getMinPriceToSell()){
             console.log(`Já estou no lucro! Agora vou esperar começar a cair pra vender.
-                        Preço atual: ${this.currentPrice}
+                        Preço atual: ${this.market.currentPrice}
                         Mínimo preço de venda: ${this.getMinPriceToSell()}`);
-            if(this.currentPrice < this.lastPrice 
-                    && this.currentPrice <= this.getPriceMinusTolerance()){
+            if(this.market.currentPrice < this.market.lastPrice 
+                    && this.market.currentPrice <= this.getPriceMinusTolerance()){
                         console(`Vou vender!
-                                Preço de venda: ${this.currentPrice}
+                                Preço de venda: ${this.market.currentPrice}
                                 Preço menos a tolerância de queda: ${this.getPriceMinusTolerance()}`)
                         return true;
-                    }
-        }
-        console.log(`Comprei: ${this.bought}`);
-        if(this.bought){
-            console.log(`
-                Ainda não é uma boa pra vender.
-                Preço atual: ${this.currentPrice}
-                Preço com lucro: ${this.getMinPriceToSell()}`)
+                    }                    
         }
         return false;
     }
 
     this.getPriceMinusTolerance = () => {
-        return this.currentPrice - this.currentPrice * configParams.tolerance;
+        return parseFloat(this.market.currentPrice) - parseFloat(this.market.currentPrice) * parseFloat(this.configParams.tolerance);
     }
 
     this.getMinPriceToSell = () =>{
-        return this.buyPrice * configParams.taxes * configParams.profit;
+        return parseFloat(this.buyPrice) * parseFloat(this.configParams.taxes) * parseFloat(this.configParams.profit);
     }
 
     this.execute = (ticker) => {
-        this.refreshData(ticker);
+        this.refresh(ticker);
         if(this.canBuy()){
-            console.log(`Criaria uma ordem de compra às ${this.dateUtils.getCurrentDateTime()} com o preço de ${this.currentPrice}`);
-            this.buyPrice = this.currentPrice;
+            console.log(`Criaria uma ordem de compra às ${this.dateUtils.getCurrentDateTime()} com o preço de ${this.market.currentPrice}`);
+            this.buyPrice = this.market.currentPrice;
             this.bought = true;
-        }else if(this.canSell()){
-            console.log(`Criei uma ordem de venda às ${this.dateUtils.getCurrentDateTime()} com o preço de ${this.currentPrice}`);
-            this.sellPrice = this.currentPrice;
+            this.emailService.setSubject('Ordem de compra!');
+            this.emailService.setBody(`<p><b>Criação de ordem de compra!</b><p>
+                                       <p>Preço de compra: ${this.market.currentPrice}</p>
+                                       <p>Hora da compra: ${this.dateUtils.getCurrentDateTime()}</p>`);
+            this.emailService.send();
+        } else {
+            console.log(`Não compensa comprar ainda. Veja as médias!`);
+        }
+        if(this.canSell()){
+            console.log(`Criei uma ordem de venda às ${this.dateUtils.getCurrentDateTime()} com o preço de ${this.market.currentPrice}`);
+            this.sellPrice = this.market.currentPrice;
             this.bought = false;
+            this.emailService.setSubject('Ordem de venda!');
+            this.emailService.setBody(`<p><b>Criação de ordem de venda!</b><p>
+                                       <p>Preço de venda: ${this.market.currentPrice}</p>
+                                       <p>Hora da venda: ${this.dateUtils.getCurrentDateTime()}</p>`);
+            this.emailService.send();
+        } else if(this.bought){
+            console.log(`
+                Comprei, mas ainda não é uma boa pra vender.
+                Preço atual: ${this.market.currentPrice}
+                Preço com lucro: ${this.getMinPriceToSell()}`)
         }
     }
 
