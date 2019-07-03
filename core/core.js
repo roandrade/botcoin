@@ -30,7 +30,10 @@ function Core(configParams) {
     }
 
     this.canBuy = () => {
-        return !this.bought && this.market.isAveragesReady() && this.market.getShortTermAverage() > this.market.getLongTermAverage();
+        return !this.bought 
+                && this.market.isAveragesReady() 
+                && this.market.getShortTermAverage() > this.market.getLongTermAverage()
+                && this.market.currentPrice > this.market.lastPrice;
     }
 
     this.canSell = () =>{        
