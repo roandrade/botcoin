@@ -33,7 +33,7 @@ function Core(configParams) {
         return !this.bought 
                 && this.market.isAveragesReady() 
                 && this.market.getShortTermAverage() > this.market.getLongTermAverage()
-                && this.market.currentPrice > this.market.lastPrice;
+                && this.market.currentPrice > this.market.lastPrice; // preço não pode estar em queda.
     }
 
     this.canSell = () =>{        
