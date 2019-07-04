@@ -54,7 +54,7 @@ function Core(configParams) {
     }
 
     this.getPriceMinusTolerance = () => {
-        return parseFloat(this.market.currentPrice) - parseFloat(this.market.currentPrice) * parseFloat(this.configParams.tolerance);
+        return parseFloat(this.market.lastPrice) - parseFloat(this.market.lastPrice) * parseFloat(this.configParams.tolerance);
     }
 
     this.getMinPriceToSell = () =>{
