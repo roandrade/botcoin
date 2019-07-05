@@ -1,52 +1,76 @@
 const Queue = require('../utils/queue').Queue
+const Candle = require('./candle').Candle;
+const DateUtils = require('../utils/dateUtils').DateUtils;
 
 function Market(){
 
-    this.shortTermPrices = new Queue();
+    this.dateUtils = new DateUtils();
 
-    this.longTermPrices = new Queue();
+    this.hasAverages = false;
 
-    this.hasShortTermAverage = false;
+    this.candles = new Queue();
 
-    this.hasLongTermAverage = false;
+    this.openedCandle;
 
-    this.lastPrice = 0.0;
+    this.getLastPrice = () => {
+        return this.candles.lerNaPosicao(this.candles.length() - 1) ? 
+                    this.candles.lerNaPosicao(this.candles.length() - 1).average :
+                    'Não há preço anterior';
+    };
 
-    this.currentPrice = 0.0;
+    this.getCurrentPrice = () => {
+        return this.candles.lerNaPosicao(this.candles.length()) ? 
+                    this.candles.lerNaPosicao(this.candles.length()).average : 
+                    'Não há último preço';
+    };
 
     this.refresh = (ticker) => {
-        this.shortTermPrices.inserirDiferente(ticker);
-        this.currentPrice = ticker.last;
-        this.lastPrice = this.shortTermPrices.length() > 1 ? this.shortTermPrices.lerNaPosicao(this.shortTermPrices.length() - 2).last : 0.0;
-        if(this.shortTermPrices.length() > parseInt(process.env.SHORT_QUEUE_LENGTH)){
-            this.shortTermPrices.removerPrimeiro();
-            this.hasShortTermAverage = true;
+
+        if(this.dateUtils.isTimeToOpenClose(ticker.date)){
+            console.log('Abri ou fechei um candle.')
+            if(this.openedCandle){
+                this.closeCandle(ticker);
+                this.hasAverages = parseInt(process.env.LONG_QUEUE_LENGTH) == this.candles.length();
+                if(this.candles.length() > parseInt(process.env.LONG_QUEUE_LENGTH)){
+                    this.candles.removerPrimeiro();
+                }
+            }
+            this.openedCandle = new Candle();
+            this.openedCandle.open(ticker);
         }
-        this.longTermPrices.inserirDiferente(ticker);
-        if(this.longTermPrices.length() > parseInt(process.env.LONG_QUEUE_LENGTH)){
-            this.longTermPrices.removerPrimeiro();
-            this.hasLongTermAverage = true;
-        }
+
+    }
+
+    this.createCandle = (ticker) => {
+        let candle = new Candle();
+        candle.open(ticker, this.dateUtils.getDateFrom(ticker.date));        
+    }
+
+    this.closeCandle = (ticker) => {
+        candle.close(ticker, this.dateUtils.getDateFrom(ticker.date));
+        this.candles.inserir(candle);
     }
 
     this.getShortTermAverage = () => {
-        if(this.hasShortTermAverage){
-            let sum = this.shortTermPrices.lista.reduce((acumulator, currentTicker) => acumulator + parseFloat(currentTicker.last), 0);
-            return sum / this.shortTermPrices.length();
+        if(this.hasAverages){
+            let shortTermPrices = this.candles.lista.slice(this.candles.length() - parseInt(process.env.SHORT_QUEUE_LENGTH), this.candles.length());
+            let sum = shortTermPrices.lista.reduce((acumulator, currentTicker) => acumulator + parseFloat(currentTicker.last), 0);
+            return sum / shortTermPrices.length();
         }
-        return `Ainda não há média de curto prazo: ${this.shortTermPrices.length()} preços`;
+        return `Ainda não há média de curto prazo: ${this.candles.length()} candles`;
     }
 
     this.getLongTermAverage = () => {
-        if(this.hasLongTermAverage){
-            let sum = this.longTermPrices.lista.reduce((acumulator, currentTicker) => acumulator + parseFloat(currentTicker.last), 0);
-            return sum / this.longTermPrices.length();        
+        if(this.hasAverages){
+            let longTermPrices = this.candles.lista.slice(this.candles.length() - parseInt(process.env.LONG_QUEUE_LENGTH), this.candles.length());
+            let sum = longTermPrices.lista.reduce((acumulator, currentTicker) => acumulator + parseFloat(currentTicker.last), 0);
+            return sum / longTermPrices.length();        
         }
-        return `Ainda não há média de longo prazo: ${this.longTermPrices.length()} preços`;
+        return `Ainda não há média de longo prazo: ${this.candles.length()} candles`;
     }
 
     this.isAveragesReady = () => {
-        return this.hasLongTermAverage && this.hasShortTermAverage;
+        return this.hasAverages;
     }
 }
 

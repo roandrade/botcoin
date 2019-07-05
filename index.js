@@ -40,7 +40,7 @@ setInterval(() =>
    infoApi.ticker((response) => {
        console.log(`Comecei a rodar ${dateUtils.getCurrentDateTime()}`)
        if(process.env.CAN_EXECUTE === 'true'){
-           console.log(response.ticker)
+           //console.log(response.ticker)
            core.execute(response.ticker)
        }else{
            console.log('No momento não estou operando no mercado.')
