@@ -42,13 +42,13 @@ function Market(){
     }
 
     this.createCandle = (ticker) => {
-        let candle = new Candle();
-        candle.open(ticker, this.dateUtils.getDateFrom(ticker.date));        
+        this.openedCandle = new Candle();
+        this.openedCandle.open(ticker, this.dateUtils.getDateFrom(ticker.date));        
     }
 
     this.closeCandle = (ticker) => {
-        candle.close(ticker, this.dateUtils.getDateFrom(ticker.date));
-        this.candles.inserir(candle);
+        this.openedCandle.close(ticker, this.dateUtils.getDateFrom(ticker.date));
+        this.candles.inserir(this.openedCandle);
     }
 
     this.getShortTermAverage = () => {
